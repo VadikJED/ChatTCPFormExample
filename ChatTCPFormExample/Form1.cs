@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Threading;
 using System.Net.Sockets;
+using System.IO;
 
 
 namespace ChatTCPFormExample
@@ -16,7 +17,7 @@ namespace ChatTCPFormExample
     public partial class Form1 : Form
     {
         static string userName;
-        private const string host = "127.0.0.1";
+        private const string host = "169.254.5.120";//"127.0.0.1";
         private const int port = 8888;
         static TcpClient client;
         static NetworkStream stream;
@@ -90,6 +91,8 @@ namespace ChatTCPFormExample
             {
                 try
                 {
+                    if (file) continue;
+
                     byte[] data = new byte[256]; // буфер для получаемых данных
                     StringBuilder builder = new StringBuilder();
                     int bytes = 0;
@@ -148,6 +151,7 @@ namespace ChatTCPFormExample
 
                     //Console.ReadLine();
                     Disconnect();
+                    return;
                 }
             }
         }
@@ -203,11 +207,53 @@ namespace ChatTCPFormExample
         }
 
 
+        bool file = false;
 
+        private void button2_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                string FileName = openFileDialog1.FileName;//FolderForTemples + LastNameOfTemple + ".le";
+                if (File.Exists(FileName))
+                {
+                    file = true;
 
+                    BinaryReader reader = new BinaryReader(File.Open(FileName, FileMode.Open));
+                    byte[] Buffer = Encoding.UTF8.GetBytes("This is a LE file");
+                    stream.Write(Buffer, 0, Buffer.Length);
+                    Thread.Sleep(20);
+                    //Buffer = new byte[256];
+                    while (reader.BaseStream.Position < reader.BaseStream.Length - 256)
+                    {
+                        Buffer = reader.ReadBytes(256);
+                        stream.Write(Buffer, 0, Buffer.Length);
+                        Thread.Sleep(20);
+                    }
+                    int len = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
+                    Buffer = reader.ReadBytes(len);
+                    stream.Write(Buffer, 0, Buffer.Length);
 
+                    Thread.Sleep(20);
 
+                    Buffer = Encoding.UTF8.GetBytes("This is the end of file");
+                    stream.WriteAsync(Buffer, 0, Buffer.Length);
 
+                    Thread.Sleep(20);
 
+                    file = false;
+                    reader.Close();
+                    ////Считываем ответ
+                    //len = ClientServer.Read(bufferForReading, 0, 256);
+                    //if (Encoding.UTF8.GetString(bufferForReading, 0, len) != "LE success")
+                    //{
+                    //    MessageBox.Show("Не удалось загрузить файл:" + FileName);
+                    //    this.Close();
+                    //}
+                    //SetCounter(Counter);
+                    //SetNumber(LastNumber);
+                    //LayerTextBox.Text = GetFixNumber();
+                }
+            }
         }
+    }
 }
