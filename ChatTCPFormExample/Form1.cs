@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Threading;
 using System.Net.Sockets;
 using System.IO;
+using System.Runtime.Serialization.Formatters.Binary;
 
 
 namespace ChatTCPFormExample
@@ -255,5 +256,129 @@ namespace ChatTCPFormExample
                 }
             }
         }
+
+        private void button3_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                string FileName = openFileDialog1.FileName;//FolderForTemples + LastNameOfTemple + ".le";
+                if (File.Exists(FileName))
+                {
+                    file = true;
+
+                    //BinaryReader reader = new BinaryReader(File.Open(FileName, FileMode.Open));
+                    //byte[] Buffer = Encoding.UTF8.GetBytes("This is a TXT file");
+                    //stream.Write(Buffer, 0, Buffer.Length);
+                    //Thread.Sleep(20);
+                    ////Buffer = new byte[256];
+                    //while (reader.BaseStream.Position < reader.BaseStream.Length - 256)
+                    //{
+                    //    Buffer = reader.ReadBytes(256);
+                    //    stream.Write(Buffer, 0, Buffer.Length);
+                    //    Thread.Sleep(20);
+                    //}
+                    //int len = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
+                    //Buffer = reader.ReadBytes(len);
+                    //stream.Write(Buffer, 0, Buffer.Length);
+
+                    //Thread.Sleep(20);
+
+                    //Buffer = Encoding.UTF8.GetBytes("This is the end of file");
+                    //stream.WriteAsync(Buffer, 0, Buffer.Length);
+
+                    //Thread.Sleep(20);
+
+
+                    //reader.Close();
+
+
+
+                    List<string> Data = new List<string>();
+
+                    //if (openFileDialog1.ShowDialog() == DialogResult.OK)
+                    //{
+                        Data.AddRange(File.ReadAllLines(openFileDialog1.FileName, Encoding.UTF8));
+                    //}
+
+
+                    byte[] Buffer = Encoding.UTF8.GetBytes("This is a TXT file");
+                    stream.Write(Buffer, 0, Buffer.Length);
+                    Thread.Sleep(20);
+
+                    for (int i = 0; i < Data.Count; i++)
+                    {
+                        string dataOut = Data[i] + "*?";
+
+                        //Buffer = ObjectToByteArray(dataOut);
+
+                        Buffer = Encoding.UTF8.GetBytes(dataOut);
+                        stream.Write(Buffer, 0, Buffer.Length);
+                        Thread.Sleep(20);
+
+                    }
+
+                    Buffer = Encoding.UTF8.GetBytes("This is the end of file");
+                    stream.Write(Buffer, 0, Buffer.Length);
+
+                    Thread.Sleep(20);
+
+
+                    //int len = ClientServer.Read(bufferForReading, 0, 256);
+                    //if (Encoding.UTF8.GetString(bufferForReading, 0, len) == "TXT sucsses")
+                    //{
+                    //    MessageBox.Show((string)ByteArrayToObject(bufferForReading, bufferForReading.Length).ToString());
+                    //    //this.Close();
+                    //}
+                    //else
+                    //{
+                    //    MessageBox.Show((string)ByteArrayToObject(bufferForReading, bufferForReading.Length).ToString());
+                    //}
+
+
+
+
+
+
+                    file = false;
+
+                    ////Считываем ответ
+                    //len = ClientServer.Read(bufferForReading, 0, 256);
+                    //if (Encoding.UTF8.GetString(bufferForReading, 0, len) != "LE success")
+                    //{
+                    //    MessageBox.Show("Не удалось загрузить файл:" + FileName);
+                    //    this.Close();
+                    //}
+                    //SetCounter(Counter);
+                    //SetNumber(LastNumber);
+                    //LayerTextBox.Text = GetFixNumber();
+                }
+            }
+        }
+
+
+
+
+
+
+
+
+
+        public static byte[] ObjectToByteArray(Object obj)
+        {
+            BinaryFormatter bf = new BinaryFormatter();
+            using (var ms = new MemoryStream())
+            {
+                bf.Serialize(ms, obj);
+                return ms.ToArray();
+            }
+        }
+
+
+
+
+
+
+
+
     }
 }
