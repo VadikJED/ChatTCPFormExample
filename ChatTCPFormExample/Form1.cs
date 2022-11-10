@@ -17,13 +17,13 @@ namespace ChatTCPFormExample
 {
     public partial class Form1 : Form
     {
-        static string userName;
+        static string ApiKey = "ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
         private const string host = "169.254.5.120";//"127.0.0.1";
         private const int port = 8888;
         static TcpClient client;
         static NetworkStream stream;
 
-
+       
 
         public Form1()
         {
@@ -33,14 +33,14 @@ namespace ChatTCPFormExample
         private void Form1_Load(object sender, EventArgs e)
         {
             //Console.Write("Введите свое имя: ");
-            userName = "@#$";
+           // userName = "@#$";
             client = new TcpClient();
             try
             {
                 client.Connect(host, port); //подключение клиента
                 stream = client.GetStream(); // получаем поток
 
-                string message = userName;
+                string message = ApiKey;
                 byte[] data = Encoding.UTF8.GetBytes(message);
                 stream.Write(data, 0, data.Length);
 
@@ -49,7 +49,7 @@ namespace ChatTCPFormExample
                 receiveThread.Start(); //старт потока
                // Console.WriteLine("Добро пожаловать, {0}", userName);
 
-                textBox2.Text = ("Добро пожаловать, {0}", userName) + "\r\n" + textBox2.Text;
+                textBox2.Text = ("Добро пожаловать, {0}", ApiKey) + "\r\n" + textBox2.Text;
                 // SendMessage();
             }
             catch (Exception ex)
@@ -222,27 +222,29 @@ namespace ChatTCPFormExample
                     BinaryReader reader = new BinaryReader(File.Open(FileName, FileMode.Open));
                     byte[] Buffer = Encoding.UTF8.GetBytes("This is a LE file");
                     stream.Write(Buffer, 0, Buffer.Length);
-                    Thread.Sleep(20);
+                    Thread.Sleep(50);
                     //Buffer = new byte[256];
                     while (reader.BaseStream.Position < reader.BaseStream.Length - 256)
                     {
                         Buffer = reader.ReadBytes(256);
                         stream.Write(Buffer, 0, Buffer.Length);
-                        Thread.Sleep(20);
+                        Thread.Sleep(50);
                     }
                     int len = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
                     Buffer = reader.ReadBytes(len);
                     stream.Write(Buffer, 0, Buffer.Length);
 
-                    Thread.Sleep(20);
+                    Thread.Sleep(50);
 
                     Buffer = Encoding.UTF8.GetBytes("This is the end of file");
                     stream.WriteAsync(Buffer, 0, Buffer.Length);
 
-                    Thread.Sleep(20);
+                    Thread.Sleep(50);
+
+                    reader.Close();
 
                     file = false;
-                    reader.Close();
+                    
                     ////Считываем ответ
                     //len = ClientServer.Read(bufferForReading, 0, 256);
                     //if (Encoding.UTF8.GetString(bufferForReading, 0, len) != "LE success")
@@ -303,7 +305,7 @@ namespace ChatTCPFormExample
 
                     byte[] Buffer = Encoding.UTF8.GetBytes("This is a TXT file");
                     stream.Write(Buffer, 0, Buffer.Length);
-                    Thread.Sleep(20);
+                    Thread.Sleep(50);
 
                     for (int i = 0; i < Data.Count; i++)
                     {
@@ -313,14 +315,14 @@ namespace ChatTCPFormExample
 
                         Buffer = Encoding.UTF8.GetBytes(dataOut);
                         stream.Write(Buffer, 0, Buffer.Length);
-                        Thread.Sleep(20);
+                        Thread.Sleep(50);
 
                     }
 
                     Buffer = Encoding.UTF8.GetBytes("This is the end of file");
                     stream.Write(Buffer, 0, Buffer.Length);
 
-                    Thread.Sleep(20);
+                    Thread.Sleep(50);
 
 
                     //int len = ClientServer.Read(bufferForReading, 0, 256);
