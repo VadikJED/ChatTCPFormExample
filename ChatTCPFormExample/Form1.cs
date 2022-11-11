@@ -18,6 +18,14 @@ namespace ChatTCPFormExample
     public partial class Form1 : Form
     {
         static string ApiKey = "ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
+        public string ID;
+        
+        
+        public string Prefix;
+
+        public byte[] dataPrefix;
+
+
         private const string host = "169.254.5.120";//"127.0.0.1";
         private const int port = 8888;
         static TcpClient client;
@@ -28,60 +36,116 @@ namespace ChatTCPFormExample
         public Form1()
         {
             InitializeComponent();
+
+            Init();
+
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
             //Console.Write("Введите свое имя: ");
-           // userName = "@#$";
+            // userName = "@#$";
+
+
             client = new TcpClient();
             try
             {
-                client.Connect(host, port); //подключение клиента
+
+                client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
+
+
+
+            }
+            catch (Exception ex)
+            {
+
+
+                Console.WriteLine(ex.Message);
+            }
+            finally
+            {
+                // Disconnect();
+            }
+
+
+           while (!OK)
+           {
+                Application.DoEvents();
+                Thread.Sleep(20);
+           }
+
+
+
+        }
+
+        public void Init()
+        {
+            System.Diagnostics.Process p = new System.Diagnostics.Process();
+            p.StartInfo.FileName = @"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\win32\Debug\net5.0-windows\MaxiGraf.exe";
+            //if (GlobalsProvider.settings.SuperUser)
+            p.StartInfo.Arguments = "TCP_U " + host + " " + port + " " + ApiKey; // нужно передовать IP-addres and port namber
+            p.Start();
+            // p.WaitForExit();
+            p.WaitForInputIdle();
+            
+        }
+
+        bool OK = false;
+
+        private void OnConnect(IAsyncResult ar)
+        {
+            try
+            {
+                client.EndConnect(ar);
+
+
+                OK = true;
+
                 stream = client.GetStream(); // получаем поток
 
                 string message = ApiKey;
                 byte[] data = Encoding.UTF8.GetBytes(message);
                 stream.Write(data, 0, data.Length);
 
+                Thread.Sleep(50);
                 // запускаем новый поток для получения данных
                 Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
                 receiveThread.Start(); //старт потока
-               // Console.WriteLine("Добро пожаловать, {0}", userName);
+                                       // Console.WriteLine("Добро пожаловать, {0}", userName);
 
-                textBox2.Text = ("Добро пожаловать, {0}", ApiKey) + "\r\n" + textBox2.Text;
-                // SendMessage();
+
+                Invoke(new MethodInvoker(() =>
+                {
+                    //string time = DateTime.Now.ToShortTimeString();
+                    addData(/*time + " " +*/  ("Добро пожаловать, {0}", ApiKey) + "\r\n" /*+ "\r\n"*/);
+                }));
+
+
+
+                //textBox2.Text += ("Добро пожаловать, {0}", ApiKey) + "\r\n" + textBox2.Text;
+
             }
             catch (Exception ex)
             {
-
-                
                 Console.WriteLine(ex.Message);
-            }
-            finally
-            {
-               // Disconnect();
+
+                client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
             }
         }
 
 
-
-
-
-
-
-
         // отправка сообщений
-        void SendMessage(string message)
+        void SendMessage(string message, bool usePrefix = false)
         {
             //Console.WriteLine("Введите сообщение: ");
 
             //while (true)
             //{
                // string message = Console.ReadLine();
-                byte[] data = Encoding.UTF8.GetBytes(message);
+                byte[] data = Encoding.UTF8.GetBytes(usePrefix == false ? message : Prefix + message);
                 stream.Write(data, 0, data.Length);
-                textBox2.Text = message + "\r\n" + textBox2.Text;
+                Thread.Sleep(50);
+            //textBox2.Text += message + "\r\n" + textBox2.Text;
 
             //}
         }
@@ -108,16 +172,20 @@ namespace ChatTCPFormExample
                     //Console.WriteLine(message);//вывод сообщения
                     //textBox2.Text = message + "\r\n" + textBox2.Text;
 
+                    System.Diagnostics.Debug.WriteLine(message);
 
                     Invoke(new MethodInvoker(() =>
                     {
                         //string time = DateTime.Now.ToShortTimeString();
-                        addData(/*time + " " +*/ message + "\r\n" + textBox2.Text);
+                        addData(/*time + " " +*/ message /*+ "\r\n"*/);
                     }));
 
 
 
-                    if (message == "PleaseTurnOffTheClient")
+
+
+
+                    if (message.Contains("PleaseTurnOffTheClient"))
                     {
                        
 
@@ -125,7 +193,7 @@ namespace ChatTCPFormExample
 
                         Invoke(new MethodInvoker(() =>
                         {
-                            addData(message + " Подключение прервано!" + "\r\n" + textBox2.Text);
+                            addData(message + " Подключение прервано!" + "\r\n" );
                         }));
 
 
@@ -133,6 +201,39 @@ namespace ChatTCPFormExample
 
                         Disconnect();
                         break;
+                    }
+                    else if(message.Contains("YourIdIs="))
+                    {
+                        string[] mes = message.Split('=');
+
+                        for (int i = 0; i < mes.Length; i++)
+                            System.Diagnostics.Debug.WriteLine(string.Format("mes {0} {1}", i, mes[i]));
+
+
+                        ID = mes[1];
+
+                        Prefix = ApiKey + '|' + ID + '|';
+
+                        System.Diagnostics.Debug.WriteLine(string.Format(
+                            "ApiKey {0}" + Environment.NewLine +
+                            "ID {1}" + Environment.NewLine +
+                            "Prefix {2}" + Environment.NewLine
+                            ,
+                            ApiKey, ID, Prefix
+                            ));
+
+                        dataPrefix = Encoding.UTF8.GetBytes(Prefix);
+
+
+
+
+
+                       // SendMessage("Api Tcp Prefix Length"  + "=" + dataPrefix.Length);
+
+
+                        byte[] dataL = Encoding.UTF8.GetBytes("Api Tcp Prefix Length" + "=" + dataPrefix.Length);
+                        stream.Write(dataL, 0, dataL.Length);
+                        Thread.Sleep(50);
                     }
 
 
@@ -173,13 +274,13 @@ namespace ChatTCPFormExample
 
         private void button1_Click(object sender, EventArgs e)
         {
-            SendMessage(textBox1.Text);
+            SendMessage(textBox1.Text, usePrefix: true);
         }
 
 
 
         object locker = new object();
-        public void addData(string data)
+        public void addData(string data_in)
         {
             lock (locker)
             {
@@ -189,7 +290,7 @@ namespace ChatTCPFormExample
                     this.Invoke(new MethodInvoker(() =>
                     {
                         string time = DateTime.Now.ToShortTimeString();
-                        textBox2.Text = time + " " + data + "\r\n" + textBox2.Text;
+                        textBox2.Text += time + " " + data_in + "\r\n";
                     }));
 
                 }
@@ -220,25 +321,45 @@ namespace ChatTCPFormExample
                     file = true;
 
                     BinaryReader reader = new BinaryReader(File.Open(FileName, FileMode.Open));
-                    byte[] Buffer = Encoding.UTF8.GetBytes("This is a LE file");
+                    
+                    byte[] Buffer = Encoding.UTF8.GetBytes(Prefix + "This is a LE file"); 
                     stream.Write(Buffer, 0, Buffer.Length);
                     Thread.Sleep(50);
+                    
                     //Buffer = new byte[256];
+
+                    byte[] UB = dataPrefix;
+                   
+
                     while (reader.BaseStream.Position < reader.BaseStream.Length - 256)
                     {
                         Buffer = reader.ReadBytes(256);
-                        stream.Write(Buffer, 0, Buffer.Length);
+
+                        UB = dataPrefix;
+                        
+                        Array.Resize(ref UB, UB.Length + Buffer.Length);
+                        Array.Copy(Buffer, 0, UB, UB.Length - Buffer.Length, Buffer.Length);
+
+                        //stream.Write(Buffer, 0, Buffer.Length);
+                        stream.Write(UB, 0, UB.Length);
                         Thread.Sleep(50);
                     }
+                    
                     int len = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
                     Buffer = reader.ReadBytes(len);
-                    stream.Write(Buffer, 0, Buffer.Length);
 
+
+                    UB = dataPrefix;
+
+                    Array.Resize(ref UB, UB.Length + Buffer.Length);
+                    Array.Copy(Buffer, 0, UB, UB.Length - Buffer.Length, Buffer.Length);
+
+                    //stream.Write(Buffer, 0, Buffer.Length);
+                    stream.Write(UB, 0, UB.Length);
                     Thread.Sleep(50);
 
-                    Buffer = Encoding.UTF8.GetBytes("This is the end of file");
+                    Buffer = Encoding.UTF8.GetBytes(Prefix + "This is the end of file");
                     stream.WriteAsync(Buffer, 0, Buffer.Length);
-
                     Thread.Sleep(50);
 
                     reader.Close();
@@ -303,7 +424,7 @@ namespace ChatTCPFormExample
                     //}
 
 
-                    byte[] Buffer = Encoding.UTF8.GetBytes("This is a TXT file");
+                    byte[] Buffer = Encoding.UTF8.GetBytes(Prefix + "This is a TXT file");
                     stream.Write(Buffer, 0, Buffer.Length);
                     Thread.Sleep(50);
 
@@ -313,13 +434,13 @@ namespace ChatTCPFormExample
 
                         //Buffer = ObjectToByteArray(dataOut);
 
-                        Buffer = Encoding.UTF8.GetBytes(dataOut);
+                        Buffer = Encoding.UTF8.GetBytes(Prefix + dataOut);
                         stream.Write(Buffer, 0, Buffer.Length);
                         Thread.Sleep(50);
 
                     }
 
-                    Buffer = Encoding.UTF8.GetBytes("This is the end of file");
+                    Buffer = Encoding.UTF8.GetBytes(Prefix +"This is the end of file");
                     stream.Write(Buffer, 0, Buffer.Length);
 
                     Thread.Sleep(50);
