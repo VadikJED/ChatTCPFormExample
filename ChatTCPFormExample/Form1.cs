@@ -17,80 +17,103 @@ namespace ChatTCPFormExample
 {
     public partial class Form1 : Form
     {
+        /// <summary>
+        /// Ключ API, используется для подтверждения данных при получении 
+        /// </summary>
         static string ApiKey = "ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
+
+        /// <summary>
+        /// Идентификатор подключения
+        /// </summary>
         public string ID;
-        
-        
+
+        /// <summary>
+        /// Преамбула из ApiKey и ID в формате string
+        /// </summary>
         public string Prefix;
 
+        /// <summary>
+        /// Пеамбула из ApiKey и ID в формате byte[]
+        /// </summary>
         public byte[] dataPrefix;
 
+        /// <summary>
+        /// IP - адрес
+        /// </summary>
+        private const string host = "169.254.5.120"; //"127.0.0.1";
 
-        private const string host = "169.254.5.120";//"127.0.0.1";
+        /// <summary>
+        /// Номер порта
+        /// </summary>
         private const int port = 8888;
-        static TcpClient client;
-        static NetworkStream stream;
 
-       
+        /// <summary>
+        /// TcpClient для подключения к MG
+        /// </summary>
+        private static TcpClient client;
+
+        /// <summary>
+        /// Доступ к потоку данных
+        /// </summary>
+        private static NetworkStream stream;
+
+        /// <summary>
+        /// Флаг успешного подключения
+        /// </summary>
+        public bool OK = false;
 
         public Form1()
         {
             InitializeComponent();
 
-            Init();
-
+            // Запуск MG
+            StartMG();
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //Console.Write("Введите свое имя: ");
-            // userName = "@#$";
-
+            //Подключаемся к сокету MG
 
             client = new TcpClient();
+
             try
             {
-
                 client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
-
-
-
             }
             catch (Exception ex)
             {
-
-
-                Console.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(ex.Message);
             }
-            finally
+
+
+            //Ожидание подключения
+            while (!OK)
             {
-                // Disconnect();
-            }
-
-
-           while (!OK)
-           {
                 Application.DoEvents();
                 Thread.Sleep(20);
-           }
-
-
-
+            }
         }
 
-        public void Init()
+        /// <summary>
+        /// Запуск MG с парметрами
+        /// </summary>
+        public void StartMG()
         {
             System.Diagnostics.Process p = new System.Diagnostics.Process();
+            
+            //Путь к файлу MaxiGraf.exe
             p.StartInfo.FileName = @"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\win32\Debug\net5.0-windows\MaxiGraf.exe";
-            //if (GlobalsProvider.settings.SuperUser)
-            p.StartInfo.Arguments = "TCP_U " + host + " " + port + " " + ApiKey; // нужно передовать IP-addres and port namber
-            p.Start();
-            // p.WaitForExit();
+
+            //TCP - запуск MG в скрытом виде виде  / TCP_U - запуск MG в развернутом виде
+            //Нужно передовать тип запуска, IP-addres, port namber, ApiKey
+            //ПРимер: TCP_U 169.254.5.120 8888 ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R
+            p.StartInfo.Arguments = "TCP_U " + host + " " + port + " " + ApiKey; 
+            p.Start();           
             p.WaitForInputIdle();
             
         }
 
-        bool OK = false;
+        
 
         private void OnConnect(IAsyncResult ar)
         {
@@ -98,56 +121,51 @@ namespace ChatTCPFormExample
             {
                 client.EndConnect(ar);
 
-
                 OK = true;
 
                 stream = client.GetStream(); // получаем поток
 
-                string message = ApiKey;
+                string message = ;
+
+                //Отпровляем ApiKey
                 byte[] data = Encoding.UTF8.GetBytes(message);
                 stream.Write(data, 0, data.Length);
-
                 Thread.Sleep(50);
+
                 // запускаем новый поток для получения данных
                 Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
                 receiveThread.Start(); //старт потока
-                                       // Console.WriteLine("Добро пожаловать, {0}", userName);
+                                       
 
 
                 Invoke(new MethodInvoker(() =>
-                {
-                    //string time = DateTime.Now.ToShortTimeString();
-                    addData(/*time + " " +*/  ("Добро пожаловать, {0}", ApiKey) + "\r\n" /*+ "\r\n"*/);
+                {                   
+                    addData(("ApiKey, {0}", ApiKey) + "\r\n");
                 }));
-
-
-
-                //textBox2.Text += ("Добро пожаловать, {0}", ApiKey) + "\r\n" + textBox2.Text;
-
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.Message);
+                System.Diagnostics.Debug.WriteLine(ex.Message);
 
+                OK = false;
+
+                // Переподключается 
                 client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
             }
         }
 
 
-        // отправка сообщений
+        /// <summary>
+        ///  отправка сообщений
+        /// </summary>
+        /// <param name="message">Сообщение</param>
+        /// <param name="usePrefix">Использовать префикс</param>
         void SendMessage(string message, bool usePrefix = false)
         {
-            //Console.WriteLine("Введите сообщение: ");
-
-            //while (true)
-            //{
-               // string message = Console.ReadLine();
                 byte[] data = Encoding.UTF8.GetBytes(usePrefix == false ? message : Prefix + message);
                 stream.Write(data, 0, data.Length);
                 Thread.Sleep(50);
-            //textBox2.Text += message + "\r\n" + textBox2.Text;
-
-            //}
+            
         }
         // получение сообщений
         void ReceiveMessage()
@@ -168,16 +186,13 @@ namespace ChatTCPFormExample
                     }
                     while (stream.DataAvailable);
 
-                    string message = builder.ToString();
-                    //Console.WriteLine(message);//вывод сообщения
-                    //textBox2.Text = message + "\r\n" + textBox2.Text;
+                    string message = builder.ToString();                 
 
                     System.Diagnostics.Debug.WriteLine(message);
 
                     Invoke(new MethodInvoker(() =>
                     {
-                        //string time = DateTime.Now.ToShortTimeString();
-                        addData(/*time + " " +*/ message /*+ "\r\n"*/);
+                        addData(message);
                     }));
 
 
@@ -187,23 +202,18 @@ namespace ChatTCPFormExample
 
                     if (message.Contains("PleaseTurnOffTheClient"))
                     {
-                       
-
-                        //textBox2.Text = message + " Подключение прервано!" + "\r\n" + textBox2.Text;
-
                         Invoke(new MethodInvoker(() =>
                         {
                             addData(message + " Подключение прервано!" + "\r\n" );
                         }));
-
-
-
 
                         Disconnect();
                         break;
                     }
                     else if(message.Contains("YourIdIs="))
                     {
+                        //Получаем ID и формируем префикс
+
                         string[] mes = message.Split('=');
 
                         for (int i = 0; i < mes.Length; i++)
@@ -224,13 +234,6 @@ namespace ChatTCPFormExample
 
                         dataPrefix = Encoding.UTF8.GetBytes(Prefix);
 
-
-
-
-
-                       // SendMessage("Api Tcp Prefix Length"  + "=" + dataPrefix.Length);
-
-
                         byte[] dataL = Encoding.UTF8.GetBytes("Api Tcp Prefix Length" + "=" + dataPrefix.Length);
                         stream.Write(dataL, 0, dataL.Length);
                         Thread.Sleep(50);
@@ -241,17 +244,10 @@ namespace ChatTCPFormExample
 
 
                 }
-                catch
+                catch(Exception ex)
                 {
-                    Console.WriteLine("Подключение прервано!"); //соединение было прервано
+                    System.Diagnostics.Debug.WriteLine("Подключение прервано! " + ex.Message); //соединение было прервано
 
-                    //Invoke(new MethodInvoker(() =>
-                    //{
-                    //    addData("Подключение прервано!" + "\r\n" + textBox2.Text);
-                    //}));
-
-
-                    //Console.ReadLine();
                     Disconnect();
                     return;
                 }
@@ -263,8 +259,7 @@ namespace ChatTCPFormExample
             if (stream != null)
                 stream.Close();//отключение потока
             if (client != null)
-                client.Close();//отключение клиента
-           // Environment.Exit(0); //завершение процесса
+                client.Close();//отключение клиента           
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -296,10 +291,7 @@ namespace ChatTCPFormExample
                 }
                 catch
                 {
-                    //Form1.allDead = false;
-
-                    ////if (server != null)
-                    //server.DisconnectListener();
+                   
                 }
 
 
@@ -315,7 +307,7 @@ namespace ChatTCPFormExample
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                string FileName = openFileDialog1.FileName;//FolderForTemples + LastNameOfTemple + ".le";
+                string FileName = openFileDialog1.FileName;
                 if (File.Exists(FileName))
                 {
                     file = true;
