@@ -125,7 +125,7 @@ namespace ChatTCPFormExample
 
                 stream = client.GetStream(); // получаем поток
 
-                string message = ;
+                string message = ApiKey;
 
                 //Отпровляем ApiKey
                 byte[] data = Encoding.UTF8.GetBytes(message);
@@ -140,7 +140,7 @@ namespace ChatTCPFormExample
 
                 Invoke(new MethodInvoker(() =>
                 {                   
-                    addData(("ApiKey, {0}", ApiKey) + "\r\n");
+                    addData(string.Format("ApiKey, {0}", ApiKey) + "\r\n");
                 }));
             }
             catch (Exception ex)
@@ -202,6 +202,8 @@ namespace ChatTCPFormExample
 
                     if (message.Contains("PleaseTurnOffTheClient"))
                     {
+                        //Штатное зарешение соединения
+
                         Invoke(new MethodInvoker(() =>
                         {
                             addData(message + " Подключение прервано!" + "\r\n" );
@@ -238,16 +240,10 @@ namespace ChatTCPFormExample
                         stream.Write(dataL, 0, dataL.Length);
                         Thread.Sleep(50);
                     }
-
-
-
-
-
                 }
                 catch(Exception ex)
                 {
                     System.Diagnostics.Debug.WriteLine("Подключение прервано! " + ex.Message); //соединение было прервано
-
                     Disconnect();
                     return;
                 }
@@ -279,7 +275,6 @@ namespace ChatTCPFormExample
         {
             lock (locker)
             {
-
                 try
                 {
                     this.Invoke(new MethodInvoker(() =>
@@ -293,16 +288,18 @@ namespace ChatTCPFormExample
                 {
                    
                 }
-
-
-
             }
-
         }
 
 
         bool file = false;
 
+
+        /// <summary>
+        /// Передача LE файла
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button2_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
@@ -317,8 +314,6 @@ namespace ChatTCPFormExample
                     byte[] Buffer = Encoding.UTF8.GetBytes(Prefix + "This is a LE file"); 
                     stream.Write(Buffer, 0, Buffer.Length);
                     Thread.Sleep(50);
-                    
-                    //Buffer = new byte[256];
 
                     byte[] UB = dataPrefix;
                    
@@ -328,11 +323,13 @@ namespace ChatTCPFormExample
                         Buffer = reader.ReadBytes(256);
 
                         UB = dataPrefix;
-                        
+
+                        //Прибавляем к каждому пакету префикс
+
                         Array.Resize(ref UB, UB.Length + Buffer.Length);
                         Array.Copy(Buffer, 0, UB, UB.Length - Buffer.Length, Buffer.Length);
 
-                        //stream.Write(Buffer, 0, Buffer.Length);
+                       
                         stream.Write(UB, 0, UB.Length);
                         Thread.Sleep(50);
                     }
@@ -346,7 +343,7 @@ namespace ChatTCPFormExample
                     Array.Resize(ref UB, UB.Length + Buffer.Length);
                     Array.Copy(Buffer, 0, UB, UB.Length - Buffer.Length, Buffer.Length);
 
-                    //stream.Write(Buffer, 0, Buffer.Length);
+                  
                     stream.Write(UB, 0, UB.Length);
                     Thread.Sleep(50);
 
@@ -357,64 +354,30 @@ namespace ChatTCPFormExample
                     reader.Close();
 
                     file = false;
-                    
-                    ////Считываем ответ
-                    //len = ClientServer.Read(bufferForReading, 0, 256);
-                    //if (Encoding.UTF8.GetString(bufferForReading, 0, len) != "LE success")
-                    //{
-                    //    MessageBox.Show("Не удалось загрузить файл:" + FileName);
-                    //    this.Close();
-                    //}
-                    //SetCounter(Counter);
-                    //SetNumber(LastNumber);
-                    //LayerTextBox.Text = GetFixNumber();
                 }
             }
         }
 
+
+        /// <summary>
+        /// Передача TXT (скрипта) файла
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void button3_Click(object sender, EventArgs e)
         {
             if (openFileDialog1.ShowDialog() == DialogResult.OK)
             {
-                string FileName = openFileDialog1.FileName;//FolderForTemples + LastNameOfTemple + ".le";
+                string FileName = openFileDialog1.FileName;
                 if (File.Exists(FileName))
                 {
                     file = true;
 
-                    //BinaryReader reader = new BinaryReader(File.Open(FileName, FileMode.Open));
-                    //byte[] Buffer = Encoding.UTF8.GetBytes("This is a TXT file");
-                    //stream.Write(Buffer, 0, Buffer.Length);
-                    //Thread.Sleep(20);
-                    ////Buffer = new byte[256];
-                    //while (reader.BaseStream.Position < reader.BaseStream.Length - 256)
-                    //{
-                    //    Buffer = reader.ReadBytes(256);
-                    //    stream.Write(Buffer, 0, Buffer.Length);
-                    //    Thread.Sleep(20);
-                    //}
-                    //int len = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
-                    //Buffer = reader.ReadBytes(len);
-                    //stream.Write(Buffer, 0, Buffer.Length);
-
-                    //Thread.Sleep(20);
-
-                    //Buffer = Encoding.UTF8.GetBytes("This is the end of file");
-                    //stream.WriteAsync(Buffer, 0, Buffer.Length);
-
-                    //Thread.Sleep(20);
-
-
-                    //reader.Close();
-
-
-
                     List<string> Data = new List<string>();
 
-                    //if (openFileDialog1.ShowDialog() == DialogResult.OK)
-                    //{
-                        Data.AddRange(File.ReadAllLines(openFileDialog1.FileName, Encoding.UTF8));
-                    //}
+                    Data.AddRange(File.ReadAllLines(openFileDialog1.FileName, Encoding.UTF8));
 
+                    //Прибавляем к каждой строке префикс
 
                     byte[] Buffer = Encoding.UTF8.GetBytes(Prefix + "This is a TXT file");
                     stream.Write(Buffer, 0, Buffer.Length);
@@ -423,77 +386,20 @@ namespace ChatTCPFormExample
                     for (int i = 0; i < Data.Count; i++)
                     {
                         string dataOut = Data[i] + "*?";
-
-                        //Buffer = ObjectToByteArray(dataOut);
-
+                        
                         Buffer = Encoding.UTF8.GetBytes(Prefix + dataOut);
                         stream.Write(Buffer, 0, Buffer.Length);
                         Thread.Sleep(50);
-
                     }
 
                     Buffer = Encoding.UTF8.GetBytes(Prefix +"This is the end of file");
                     stream.Write(Buffer, 0, Buffer.Length);
-
                     Thread.Sleep(50);
-
-
-                    //int len = ClientServer.Read(bufferForReading, 0, 256);
-                    //if (Encoding.UTF8.GetString(bufferForReading, 0, len) == "TXT sucsses")
-                    //{
-                    //    MessageBox.Show((string)ByteArrayToObject(bufferForReading, bufferForReading.Length).ToString());
-                    //    //this.Close();
-                    //}
-                    //else
-                    //{
-                    //    MessageBox.Show((string)ByteArrayToObject(bufferForReading, bufferForReading.Length).ToString());
-                    //}
-
-
-
-
-
-
-                    file = false;
-
-                    ////Считываем ответ
-                    //len = ClientServer.Read(bufferForReading, 0, 256);
-                    //if (Encoding.UTF8.GetString(bufferForReading, 0, len) != "LE success")
-                    //{
-                    //    MessageBox.Show("Не удалось загрузить файл:" + FileName);
-                    //    this.Close();
-                    //}
-                    //SetCounter(Counter);
-                    //SetNumber(LastNumber);
-                    //LayerTextBox.Text = GetFixNumber();
+                    
+                    file = false;                    
                 }
             }
         }
-
-
-
-
-
-
-
-
-
-        public static byte[] ObjectToByteArray(Object obj)
-        {
-            BinaryFormatter bf = new BinaryFormatter();
-            using (var ms = new MemoryStream())
-            {
-                bf.Serialize(ms, obj);
-                return ms.ToArray();
-            }
-        }
-
-
-
-
-
-
-
 
     }
 }
