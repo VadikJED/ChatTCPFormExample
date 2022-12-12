@@ -670,9 +670,11 @@ namespace ChatTCPFormExample
                     }));
 
                 }
-                catch
+                catch (Exception ex)
                 {
-
+                    System.Diagnostics.Debug.WriteLine("Подключение прервано! " + ex.Message); //соединение было прервано
+                    Disconnect();
+                    return;
                 }
             }
         }
