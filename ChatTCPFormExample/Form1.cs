@@ -109,9 +109,9 @@ namespace ChatTCPFormExample
             //@"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\x64\Debug\net5.0-windows\MaxiGraf.exe";
 
             //TCP - запуск MG в скрытом виде виде  / TCP_U - запуск MG в развернутом виде
-            //Нужно передовать тип запуска, IP-addres, port namber, ApiKey
-            //ПРимер: TCP_U 169.254.5.120 8888 ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R
-            p.StartInfo.Arguments = "TCP_U " + host + " " + port + " " + ApiKey;
+            //Нужно передовать тип запуска, IP-addres, port namber, ApiKey, true(наличие префикса в ответе)
+            //ПРимер: TCP_U 169.254.5.120 8888 ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R true
+            p.StartInfo.Arguments = "TCP_U " + host + " " + port + " " + ApiKey + " " + "true";
             p.Start();
             p.WaitForInputIdle();
 
