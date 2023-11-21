@@ -20,7 +20,8 @@ namespace ChatTCPFormExample
         /// <summary>
         /// Ключ API, используется для подтверждения данных при получении 
         /// </summary>
-        static string ApiKey = "ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
+        //static string ApiKey = "ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
+        static string ApiKey = "1qfcx2J74ASqjR6ip1F636Y3yrReyYWQ";//"ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
 
         /// <summary>
         /// Идентификатор подключения
@@ -100,9 +101,9 @@ namespace ChatTCPFormExample
         public void StartMG()
         {
             System.Diagnostics.Process p = new System.Diagnostics.Process();
-            
+
             //Путь к файлу MaxiGraf.exe
-            p.StartInfo.FileName = @"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\win32\Debug\net5.0-windows\MaxiGraf.exe";
+            p.StartInfo.FileName = @"D:\MaxiGraf\MaxiGraf.exe";//@"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\win32\Debug\net5.0-windows\MaxiGraf.exe";
 
             //TCP - запуск MG в скрытом виде виде  / TCP_U - запуск MG в развернутом виде
             //Нужно передовать тип запуска, IP-addres, port namber, ApiKey
@@ -280,7 +281,7 @@ namespace ChatTCPFormExample
                     this.Invoke(new MethodInvoker(() =>
                     {
                         string time = DateTime.Now.ToShortTimeString();
-                        textBox2.Text += time + " " + data_in + "\r\n";
+                        textBox2.Text += time + " " + data_in.Trim('\0') + "\r\n";
                     }));
 
                 }
