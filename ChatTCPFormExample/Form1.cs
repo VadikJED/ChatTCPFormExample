@@ -103,7 +103,7 @@ namespace ChatTCPFormExample
             System.Diagnostics.Process p = new System.Diagnostics.Process();
 
             //Путь к файлу MaxiGraf.exe
-            p.StartInfo.FileName = @"D:\MaxiGraf\MaxiGraf.exe";//@"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\win32\Debug\net5.0-windows\MaxiGraf.exe";
+            p.StartInfo.FileName = @"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\x64\Debug\net5.0-windows\MaxiGraf.exe";//@"D:\MaxiGraf\MaxiGraf.exe";//@"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\win32\Debug\net5.0-windows\MaxiGraf.exe";
 
             //TCP - запуск MG в скрытом виде виде  / TCP_U - запуск MG в развернутом виде
             //Нужно передовать тип запуска, IP-addres, port namber, ApiKey
@@ -402,5 +402,18 @@ namespace ChatTCPFormExample
             }
         }
 
+        private void buttonLoadLE_eql_Click(object sender, EventArgs e)
+        {
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                string FileName = openFileDialog1.FileName;
+                if (File.Exists(FileName))
+                {
+                    string Command = string.Format("LoadLE={0}", openFileDialog1.FileName);
+                    textBox1.Text = Command;
+                    button1.PerformClick();
+                }
+            }
+        }
     }
 }
