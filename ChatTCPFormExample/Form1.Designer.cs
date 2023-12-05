@@ -38,6 +38,7 @@ namespace ChatTCPFormExample
             this.buttonLoadLE_eql = new System.Windows.Forms.Button();
             this.buttonSetValueArrayV2 = new System.Windows.Forms.Button();
             this.buttonSetValueArray = new System.Windows.Forms.Button();
+            this.buttonReConnect = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBox1
@@ -121,11 +122,22 @@ namespace ChatTCPFormExample
             this.buttonSetValueArray.UseVisualStyleBackColor = true;
             this.buttonSetValueArray.Click += new System.EventHandler(this.buttonSetValueArray_Click);
             // 
+            // buttonReConnect
+            // 
+            this.buttonReConnect.Location = new System.Drawing.Point(507, 38);
+            this.buttonReConnect.Name = "buttonReConnect";
+            this.buttonReConnect.Size = new System.Drawing.Size(75, 23);
+            this.buttonReConnect.TabIndex = 25;
+            this.buttonReConnect.Text = "ReConnect";
+            this.buttonReConnect.UseVisualStyleBackColor = true;
+            this.buttonReConnect.Click += new System.EventHandler(this.buttonReConnect_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(614, 441);
+            this.Controls.Add(this.buttonReConnect);
             this.Controls.Add(this.buttonSetValueArrayV2);
             this.Controls.Add(this.buttonSetValueArray);
             this.Controls.Add(this.buttonLoadLE_eql);
@@ -159,6 +171,7 @@ namespace ChatTCPFormExample
         private System.Windows.Forms.Button buttonLoadLE_eql;
         private System.Windows.Forms.Button buttonSetValueArrayV2;
         private System.Windows.Forms.Button buttonSetValueArray;
+        private System.Windows.Forms.Button buttonReConnect;
     }
 }
 

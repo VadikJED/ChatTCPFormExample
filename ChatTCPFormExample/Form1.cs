@@ -68,7 +68,7 @@ namespace ChatTCPFormExample
             InitializeComponent();
 
             // Запуск MG
-            StartMG();
+           // StartMG();
         }
 
         private void Form1_Load(object sender, EventArgs e)
@@ -678,6 +678,30 @@ namespace ChatTCPFormExample
 
             }
 
+        }
+
+        private void buttonReConnect_Click(object sender, EventArgs e)
+        {
+            OK = false;
+
+            client = new TcpClient();
+
+            try
+            {
+                client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
+
+
+            //Ожидание подключения
+            while (!OK)
+            {
+                Application.DoEvents();
+                Thread.Sleep(20);
+            }
         }
     }
 }
