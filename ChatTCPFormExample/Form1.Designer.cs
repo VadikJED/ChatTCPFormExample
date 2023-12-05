@@ -36,6 +36,8 @@ namespace ChatTCPFormExample
             this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
             this.button3 = new System.Windows.Forms.Button();
             this.buttonLoadLE_eql = new System.Windows.Forms.Button();
+            this.buttonSetValueArrayV2 = new System.Windows.Forms.Button();
+            this.buttonSetValueArray = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBox1
@@ -99,11 +101,33 @@ namespace ChatTCPFormExample
             this.buttonLoadLE_eql.UseVisualStyleBackColor = true;
             this.buttonLoadLE_eql.Click += new System.EventHandler(this.buttonLoadLE_eql_Click);
             // 
+            // buttonSetValueArrayV2
+            // 
+            this.buttonSetValueArrayV2.Location = new System.Drawing.Point(174, 57);
+            this.buttonSetValueArrayV2.Name = "buttonSetValueArrayV2";
+            this.buttonSetValueArrayV2.Size = new System.Drawing.Size(112, 20);
+            this.buttonSetValueArrayV2.TabIndex = 24;
+            this.buttonSetValueArrayV2.Text = "SetValueArrayV2";
+            this.buttonSetValueArrayV2.UseVisualStyleBackColor = true;
+            this.buttonSetValueArrayV2.Click += new System.EventHandler(this.buttonSetValueArrayV2_Click);
+            // 
+            // buttonSetValueArray
+            // 
+            this.buttonSetValueArray.Location = new System.Drawing.Point(56, 57);
+            this.buttonSetValueArray.Name = "buttonSetValueArray";
+            this.buttonSetValueArray.Size = new System.Drawing.Size(112, 20);
+            this.buttonSetValueArray.TabIndex = 23;
+            this.buttonSetValueArray.Text = "SetValueArray";
+            this.buttonSetValueArray.UseVisualStyleBackColor = true;
+            this.buttonSetValueArray.Click += new System.EventHandler(this.buttonSetValueArray_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(614, 441);
+            this.Controls.Add(this.buttonSetValueArrayV2);
+            this.Controls.Add(this.buttonSetValueArray);
             this.Controls.Add(this.buttonLoadLE_eql);
             this.Controls.Add(this.button3);
             this.Controls.Add(this.button2);
@@ -133,6 +157,8 @@ namespace ChatTCPFormExample
         private System.Windows.Forms.OpenFileDialog openFileDialog1;
         private System.Windows.Forms.Button button3;
         private System.Windows.Forms.Button buttonLoadLE_eql;
+        private System.Windows.Forms.Button buttonSetValueArrayV2;
+        private System.Windows.Forms.Button buttonSetValueArray;
     }
 }
 
