@@ -135,11 +135,11 @@ namespace ChatTCPFormExample
                 stream.Write(data, 0, data.Length);
                 Thread.Sleep(50);
 
-                // запускаем новый поток для получения данных
-                Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
-                receiveThread.Start(); //старт потока
-                                       
+                //// запускаем новый поток для получения данных
+                //Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
+                //receiveThread.Start(); //старт потока
 
+                BeginReading();
 
                 Invoke(new MethodInvoker(() =>
                 {                   
@@ -177,7 +177,7 @@ namespace ChatTCPFormExample
 
         public void BeginReading()
         {
-            superdata = new byte[256];
+            //superdata = new byte[256];
 
             stream.BeginRead(
                 superdata, 0, superdata.Length,
@@ -185,16 +185,43 @@ namespace ChatTCPFormExample
                 stream);
         }
 
+
+
         public void EndReading(IAsyncResult ar)
         {
             try
             {
+
                 if (file) return;
 
+                if (SetValueArray)
+                {
+                    try
+                    {
+                        int bytes2 = stream.EndRead(ar);
+
+                        string message2 = Encoding.UTF8.GetString(superdata, 0, bytes2);// builder.ToString();                 
+
+                        System.Diagnostics.Debug.WriteLine("EndReading2 = " + message2.Replace('\0', '_'));
+
+                        //superdata = new byte[256];
+                        start = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        System.Diagnostics.Debug.WriteLine("Подключение прервано! " + ex.Message); //соединение было прервано
+                        Disconnect();
+                        return;
+                    }
+
+                    return;
+                }
+               
 
                 int bytes = stream.EndRead(ar);
 
-                byte[] data = new byte[256]; // буфер для получаемых данных
+              
+               // byte[] data = new byte[256]; // буфер для получаемых данных
                 StringBuilder builder = new StringBuilder();
                 //int bytes = 0;
                 //do
@@ -217,10 +244,6 @@ namespace ChatTCPFormExample
 
 
 
-                if (WhatingSetValueArray)
-                {
-                    WhatingSetValueArray = false;
-                }
 
 
 
@@ -277,8 +300,125 @@ namespace ChatTCPFormExample
 
         }
 
+        public bool start = false;
+
+        public void BeginReading2()
+        {
+            if (!SetValueArray) return;
+
+            stream.BeginRead(
+                superdata, 0, superdata.Length,
+                new AsyncCallback(EndReading2),
+                stream);
 
 
+        }
+
+        public void EndReading2(IAsyncResult ar)
+        {
+
+            if (file) return;
+
+            if (!SetValueArray)
+            {
+                try 
+                { 
+
+                    int bytes = stream.EndRead(ar);
+
+
+               
+                    StringBuilder builder = new StringBuilder();
+               
+
+                    string message = Encoding.UTF8.GetString(superdata, 0, bytes);// builder.ToString();                 
+
+                    System.Diagnostics.Debug.WriteLine(message);
+
+
+
+                    Invoke(new MethodInvoker(() =>
+                    {
+                        addData(message);
+                    }));
+
+
+
+
+
+
+                        if (message.Contains("PleaseTurnOffTheClient"))
+                        {
+                            //Штатное зарешение соединения
+
+                            Invoke(new MethodInvoker(() =>
+                            {
+                                addData(message + " Подключение прервано!" + "\r\n");
+                            }));
+
+                            Disconnect();
+                            return;
+                        }
+                        else if (message.Contains("YourIdIs="))
+                        {
+                            //Получаем ID и формируем префикс
+
+                            string[] mes = message.Split('=');
+
+                            for (int i = 0; i < mes.Length; i++)
+                                System.Diagnostics.Debug.WriteLine(string.Format("mes {0} {1}", i, mes[i]));
+
+
+                            ID = mes[1];
+
+                            Prefix = ApiKey + '|' + ID + '|';
+
+                            System.Diagnostics.Debug.WriteLine(string.Format(
+                                "ApiKey {0}" + Environment.NewLine +
+                                "ID {1}" + Environment.NewLine +
+                                "Prefix {2}" + Environment.NewLine
+                                ,
+                                ApiKey, ID, Prefix
+                                ));
+
+                            dataPrefix = Encoding.UTF8.GetBytes(Prefix);
+
+                            byte[] dataL = Encoding.UTF8.GetBytes("Api Tcp Prefix Length" + "=" + dataPrefix.Length);
+                            stream.Write(dataL, 0, dataL.Length);
+                            Thread.Sleep(50);
+                        }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine("Подключение прервано! " + ex.Message); //соединение было прервано
+                    Disconnect();
+                    return;
+                }
+
+                return;
+            }
+
+
+
+            try
+            { 
+                    int bytes = stream.EndRead(ar);
+
+                    string message2 = Encoding.UTF8.GetString(superdata, 0, bytes);// builder.ToString();                 
+
+                    System.Diagnostics.Debug.WriteLine("EndReading2 = " + message2.Replace('\0', '_'));
+
+                   // superdata = new byte[256];
+
+                    start = true;
+            }
+            catch (Exception ex)
+            {
+                 System.Diagnostics.Debug.WriteLine("Подключение прервано! " + ex.Message); //соединение было прервано
+                 Disconnect();
+                 return;
+            }
+        }
 
         // получение сообщений
         void ReceiveMessage()
@@ -553,7 +693,6 @@ namespace ChatTCPFormExample
             Thread.Sleep(50);
 
            
-
             stream.Write(databyte, 0, databyte.Length);
             Thread.Sleep(50);
 
@@ -579,7 +718,7 @@ namespace ChatTCPFormExample
         }
 
 
-        public bool WhatingSetValueArray = true;
+        bool SetValueArray = false;
 
         private void buttonSetValueArrayV2_Click(object sender, EventArgs e)
         {
@@ -643,18 +782,17 @@ namespace ChatTCPFormExample
 
             byte[] UB = dataPrefix;
 
+            SetValueArray = true;
+
             foreach (byte[] b in mas_list)
             {
 
-                WhatingSetValueArray = true;
+
 
                 byte[] B = UnicodeEncoding.UTF8.GetBytes(Prefix + "SetValueArray=" + b.Length.ToString());
                 stream.Write(B, 0, B.Length);
                 Thread.Sleep(50);
 
-
-
-              
 
                 UB = dataPrefix;
 
@@ -663,21 +801,47 @@ namespace ChatTCPFormExample
                 Array.Resize(ref UB, UB.Length + b.Length);
                 Array.Copy(b, 0, UB, UB.Length - b.Length, b.Length);
 
-
-               
-
-
                 stream.Write(UB, 0, UB.Length);
                 Thread.Sleep(50);
 
-                while(WhatingSetValueArray)
-                {
+                start = false;
+                BeginReading2();
+
+                while (!start)
+                { 
                     Thread.Sleep(50);
                 }
-              
+
+                // byte[] bufferForReading = new byte[256]; // буфер для получаемых данных
+
+
+
+
+                //  BeginReading();
+
+
+                //int len = stream.Read(bufferForReading, 0, bufferForReading.Length);
+
+                //string Result = UnicodeEncoding.UTF8.GetString(bufferForReading, 0, len);
+
+                //System.Diagnostics.Debug.WriteLine(Result);
+
+                //string contents = UnicodeEncoding.UTF8.GetString(bufferForReading, 0, len);
+
+                //string[] mas = contents.TrimEnd('\0').Split('\0');
+
+                //for (int i = 0; i < mas.Length; i++)
+                //{
+                //    System.Diagnostics.Debug.WriteLine("mas / " + i.ToString() + " = " + mas[i].ToString());
+                //}
+
+
 
             }
 
+            SetValueArray = false;
+
+            BeginReading();
         }
 
         private void buttonReConnect_Click(object sender, EventArgs e)
