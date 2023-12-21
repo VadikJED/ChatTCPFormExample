@@ -21,7 +21,8 @@ namespace ChatTCPFormExample
         /// Ключ API, используется для подтверждения данных при получении 
         /// </summary>
         //static string ApiKey = "ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
-        static string ApiKey = "1qfcx2J74ASqjR6ip1F636Y3yrReyYWQ";//"ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
+        static string ApiKey = "1qfcx2J74ASqjR6ip1F636Y3yrReyYWQ";
+                               // "ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R";
 
         /// <summary>
         /// Идентификатор подключения
@@ -555,7 +556,9 @@ namespace ChatTCPFormExample
                     stream.Write(Buffer, 0, Buffer.Length);
                     Thread.Sleep(50);
                     
-                    file = false;                    
+                    file = false;
+
+                    BeginReading();
                 }
             }
         }
