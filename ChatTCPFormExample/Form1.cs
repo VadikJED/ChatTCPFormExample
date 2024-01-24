@@ -64,6 +64,14 @@ namespace ChatTCPFormExample
         /// </summary>
         public bool OK = false;
 
+
+        /// <summary>
+        /// Use TCP_WK размер префикса == 0, максигрфа сам устанавливает знеачение префикса 0, в случае TCP_WK, команда "Api Tcp Prefix Length" игнорируется
+        /// </summary>
+        public bool WithoutKey = true;
+
+
+
         public Form1()
         {
             InitializeComponent();
@@ -80,7 +88,10 @@ namespace ChatTCPFormExample
 
             try
             {
-                client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
+                if(!WithoutKey)
+                    client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
+                else
+                    client.BeginConnect(host, port, new AsyncCallback(OnConnect_TCP_WK), null);
             }
             catch (Exception ex)
             {
@@ -158,6 +169,45 @@ namespace ChatTCPFormExample
             }
         }
 
+        private void OnConnect_TCP_WK(IAsyncResult ar)
+        {
+            try
+            {
+                client.EndConnect(ar);
+
+                OK = true;
+
+                stream = client.GetStream(); // получаем поток
+
+                //string message = ApiKey;
+
+                ////Отпровляем ApiKey
+                //byte[] data = Encoding.UTF8.GetBytes(message);
+                //stream.Write(data, 0, data.Length);
+                //Thread.Sleep(50);
+
+                ////// запускаем новый поток для получения данных
+                ////Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
+                ////receiveThread.Start(); //старт потока
+
+                BeginReading();
+
+                //Invoke(new MethodInvoker(() =>
+                //{
+                //    addData(string.Format("ApiKey, {0}", ApiKey) + "\r\n");
+                //}));
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+
+                OK = false;
+
+                // Переподключается 
+                client.BeginConnect(host, port, new AsyncCallback(OnConnect_TCP_WK), null);
+            }
+        }
+
 
         /// <summary>
         ///  отправка сообщений
@@ -167,6 +217,9 @@ namespace ChatTCPFormExample
         void SendMessage(string message, bool usePrefix = false)
         {
                 byte[] data = Encoding.UTF8.GetBytes(usePrefix == false ? message : Prefix + message);
+
+                if (WithoutKey)
+                 data = Encoding.UTF8.GetBytes(message);
                 stream.Write(data, 0, data.Length);
                 Thread.Sleep(50);
             
@@ -252,29 +305,32 @@ namespace ChatTCPFormExample
                 {
                     //Получаем ID и формируем префикс
 
-                    string[] mes = message.Split('=');
+                    if (!WithoutKey)
+                    {
+                        string[] mes = message.Split('=');
 
-                    for (int i = 0; i < mes.Length; i++)
-                        System.Diagnostics.Debug.WriteLine(string.Format("mes {0} {1}", i, mes[i]));
+                        for (int i = 0; i < mes.Length; i++)
+                            System.Diagnostics.Debug.WriteLine(string.Format("mes {0} {1}", i, mes[i]));
 
 
-                    ID = mes[1];
+                        ID = mes[1];
 
-                    Prefix = ApiKey + '|' + ID + '|';
+                        Prefix = ApiKey + '|' + ID + '|';
 
-                    System.Diagnostics.Debug.WriteLine(string.Format(
-                        "ApiKey {0}" + Environment.NewLine +
-                        "ID {1}" + Environment.NewLine +
-                        "Prefix {2}" + Environment.NewLine
-                        ,
-                        ApiKey, ID, Prefix
-                        ));
+                        System.Diagnostics.Debug.WriteLine(string.Format(
+                            "ApiKey {0}" + Environment.NewLine +
+                            "ID {1}" + Environment.NewLine +
+                            "Prefix {2}" + Environment.NewLine
+                            ,
+                            ApiKey, ID, Prefix
+                            ));
 
-                    dataPrefix = Encoding.UTF8.GetBytes(Prefix);
+                        dataPrefix = Encoding.UTF8.GetBytes(Prefix);
 
-                    byte[] dataL = Encoding.UTF8.GetBytes("Api Tcp Prefix Length" + "=" + dataPrefix.Length);
-                    stream.Write(dataL, 0, dataL.Length);
-                    Thread.Sleep(50);
+                        byte[] dataL = Encoding.UTF8.GetBytes("Api Tcp Prefix Length" + "=" + dataPrefix.Length);
+                        stream.Write(dataL, 0, dataL.Length);
+                        Thread.Sleep(50);
+                    }
                 }
             }
             catch (Exception ex)
