@@ -59,6 +59,27 @@ namespace ChatTCPFormExample
         /// </summary>
         private static NetworkStream stream;
 
+
+        /// <summary>
+        /// TcpClient для подключения к MG
+        /// </summary>
+        private static TcpClient clientNotification;
+
+        /// <summary>
+        /// Доступ к потоку данных
+        /// </summary>
+        private static NetworkStream streamNotification;
+
+        /// <summary>
+        /// IP - адрес
+        /// </summary>
+        private const string hostNotification = "169.254.5.120"; //"127.0.0.1";
+
+        /// <summary>
+        /// Номер порта
+        /// </summary>
+        private const int portNotification = 9999;
+
         /// <summary>
         /// Флаг успешного подключения
         /// </summary>
@@ -70,33 +91,58 @@ namespace ChatTCPFormExample
         /// </summary>
         public bool WithoutKey = true;
 
+        /// <summary>
+        /// Использоваь канал нотификации
+        /// </summary>
+        public bool UseNotificationChannel = true;
 
 
         public Form1()
         {
             InitializeComponent();
-
-            // Запуск MG
-           // StartMG();
+                    
         }
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            //Подключаемся к сокету MG
+            // Запуск MG
+            StartMG();
+
+
+
+            OK = false;
 
             client = new TcpClient();
 
             try
             {
-                if(!WithoutKey)
+                if (!WithoutKey)
                     client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
                 else
                     client.BeginConnect(host, port, new AsyncCallback(OnConnect_TCP_WK), null);
+
+               
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex.Message);
             }
+
+            try
+            {
+
+                if (UseNotificationChannel)
+                {
+                    clientNotification = new TcpClient();
+
+                    clientNotification.BeginConnect(hostNotification, portNotification, new AsyncCallback(OnConnect_Notification), null);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
+
 
 
             //Ожидание подключения
@@ -105,6 +151,10 @@ namespace ChatTCPFormExample
                 Application.DoEvents();
                 Thread.Sleep(20);
             }
+
+
+
+
         }
 
         /// <summary>
@@ -115,12 +165,15 @@ namespace ChatTCPFormExample
             System.Diagnostics.Process p = new System.Diagnostics.Process();
 
             //Путь к файлу MaxiGraf.exe
-            p.StartInfo.FileName = @"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\x64\Debug\net5.0-windows\MaxiGraf.exe";//@"D:\MaxiGraf\MaxiGraf.exe";//@"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\win32\Debug\net5.0-windows\MaxiGraf.exe";
+            p.StartInfo.FileName =
+                @"D:\MaxiGraf\MaxiGraf.exe";
+            // @"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\x64\Debug\net5.0-windows\MaxiGraf.exe";
+            //@"D:\MaxiGraf\MaxiGraf.exe";//@"E:\Assembly MaxiGraf Last(Current)\LaserEditorCore\bin\win32\Debug\net5.0-windows\MaxiGraf.exe";
 
             //TCP - запуск MG в скрытом виде виде  / TCP_U - запуск MG в развернутом виде
             //Нужно передовать тип запуска, IP-addres, port namber, ApiKey
             //ПРимер: TCP_U 169.254.5.120 8888 ZyzSsFxcmtoC1LNivMqkWRkbiMqeSv4R
-            p.StartInfo.Arguments = "TCP_U " + host + " " + port + " " + ApiKey; 
+            p.StartInfo.Arguments = "--tcpServer 169.254.5.120:8888 --tcpNotify 169.254.5.120:9999"; //"--tcpServer 169.254.5.120:8888"; //"TCP_U " + host + " " + port + " " + ApiKey; 
             p.Start();           
             p.WaitForInputIdle();
 
@@ -175,7 +228,7 @@ namespace ChatTCPFormExample
             {
                 client.EndConnect(ar);
 
-                OK = true;
+              
 
                 stream = client.GetStream(); // получаем поток
 
@@ -189,8 +242,11 @@ namespace ChatTCPFormExample
                 ////// запускаем новый поток для получения данных
                 ////Thread receiveThread = new Thread(new ThreadStart(ReceiveMessage));
                 ////receiveThread.Start(); //старт потока
+              
 
                 BeginReading();
+
+                OK = true;
 
                 //Invoke(new MethodInvoker(() =>
                 //{
@@ -203,10 +259,100 @@ namespace ChatTCPFormExample
 
                 OK = false;
 
+                client = new TcpClient();
+
                 // Переподключается 
                 client.BeginConnect(host, port, new AsyncCallback(OnConnect_TCP_WK), null);
             }
         }
+
+
+
+        private void OnConnect_Notification(IAsyncResult ar)
+        {
+            try
+            {
+                clientNotification.EndConnect(ar);
+
+              //  OK = true;
+
+                streamNotification = clientNotification.GetStream(); // получаем поток
+
+            
+
+                BeginReadingNotification();
+
+             
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+
+                //OK = false;
+
+                clientNotification = new TcpClient();
+
+                // Переподключается 
+                clientNotification.BeginConnect(hostNotification, portNotification, new AsyncCallback(OnConnect_Notification), null);
+            }
+        }
+
+
+        public void BeginReadingNotification()
+        {
+            try
+            {
+
+                streamNotification.BeginRead(
+                superdataNotification, 0, superdataNotification.Length,
+                new AsyncCallback(EndReadingNotification),
+                stream);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Подключение прервано! " + ex.Message); //соединение было прервано
+                Disconnect();
+                return;
+            }
+        }
+
+
+        public void EndReadingNotification(IAsyncResult ar)
+        {
+            try
+            {
+
+
+                int bytes = streamNotification.EndRead(ar);
+
+                StringBuilder builder = new StringBuilder();
+
+                string message = Encoding.UTF8.GetString(superdataNotification, 0, bytes);
+
+                System.Diagnostics.Debug.WriteLine(message);
+
+
+
+                Invoke(new MethodInvoker(() =>
+                {
+                    addData(message);
+                }));
+
+
+
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine("Подключение прервано! " + ex.Message); //соединение было прервано
+                Disconnect();
+                return;
+            }
+
+
+            BeginReadingNotification();
+
+        }
+
 
 
         /// <summary>
@@ -228,6 +374,8 @@ namespace ChatTCPFormExample
 
         byte[] superdata = new byte[256];
 
+        byte[] superdataNotification = new byte[256];
+
 
         public void BeginReading()
         {
@@ -236,6 +384,8 @@ namespace ChatTCPFormExample
                 new AsyncCallback(EndReading),
                 stream);
         }
+
+
 
 
 
@@ -468,7 +618,13 @@ namespace ChatTCPFormExample
             if (stream != null)
                 stream.Close();//отключение потока
             if (client != null)
-                client.Close();//отключение клиента           
+                client.Close();//отключение клиента
+            
+            if (streamNotification != null)
+                streamNotification.Close();
+
+            if (clientNotification != null)
+                clientNotification.Close();
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -478,7 +634,7 @@ namespace ChatTCPFormExample
 
         private void button1_Click(object sender, EventArgs e)
         {
-            SendMessage(textBox1.Text, usePrefix: true);
+            SendMessage(textBox1.Text, usePrefix: false);
         }
 
 
@@ -521,53 +677,96 @@ namespace ChatTCPFormExample
                 string FileName = openFileDialog1.FileName;
                 if (File.Exists(FileName))
                 {
-                    file = true;
-
-                    BinaryReader reader = new BinaryReader(File.Open(FileName, FileMode.Open));
-                    
-                    byte[] Buffer = Encoding.UTF8.GetBytes(Prefix + "This is a LE file"); 
-                    stream.Write(Buffer, 0, Buffer.Length);
-                    Thread.Sleep(50);
-
-                    byte[] UB = dataPrefix;
-                   
-
-                    while (reader.BaseStream.Position < reader.BaseStream.Length - 256)
+                    if (!WithoutKey)
                     {
-                        Buffer = reader.ReadBytes(256);
+                        file = true;
+
+                        BinaryReader reader = new BinaryReader(File.Open(FileName, FileMode.Open));
+
+                        byte[] Buffer = Encoding.UTF8.GetBytes(Prefix + "This is a LE file");
+                        stream.Write(Buffer, 0, Buffer.Length);
+                        Thread.Sleep(50);
+
+                        byte[] UB = dataPrefix;
+
+
+                        while (reader.BaseStream.Position < reader.BaseStream.Length - 256)
+                        {
+                            Buffer = reader.ReadBytes(256);
+
+                            UB = dataPrefix;
+
+                            //Прибавляем к каждому пакету префикс
+
+                            Array.Resize(ref UB, UB.Length + Buffer.Length);
+                            Array.Copy(Buffer, 0, UB, UB.Length - Buffer.Length, Buffer.Length);
+
+
+                            stream.Write(UB, 0, UB.Length);
+                            Thread.Sleep(50);
+                        }
+
+                        int len = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
+                        Buffer = reader.ReadBytes(len);
+
 
                         UB = dataPrefix;
-
-                        //Прибавляем к каждому пакету префикс
 
                         Array.Resize(ref UB, UB.Length + Buffer.Length);
                         Array.Copy(Buffer, 0, UB, UB.Length - Buffer.Length, Buffer.Length);
 
-                       
+
                         stream.Write(UB, 0, UB.Length);
                         Thread.Sleep(50);
+
+                        Buffer = Encoding.UTF8.GetBytes(Prefix + "This is the end of file");
+                        stream.WriteAsync(Buffer, 0, Buffer.Length);
+                        Thread.Sleep(50);
+
+                        reader.Close();
+
+                        file = false;
                     }
-                    
-                    int len = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
-                    Buffer = reader.ReadBytes(len);
+                    else
+                    {
+                        file = true;
+
+                        BinaryReader reader = new BinaryReader(File.Open(FileName, FileMode.Open));
+
+                        byte[] Buffer = Encoding.UTF8.GetBytes(Prefix + "This is a LE file");
+                        stream.Write(Buffer, 0, Buffer.Length);
+                        Thread.Sleep(50);
+
+                   
+
+                        while (reader.BaseStream.Position < reader.BaseStream.Length - 256)
+                        {
+                            Buffer = reader.ReadBytes(256);
 
 
-                    UB = dataPrefix;
 
-                    Array.Resize(ref UB, UB.Length + Buffer.Length);
-                    Array.Copy(Buffer, 0, UB, UB.Length - Buffer.Length, Buffer.Length);
+                            stream.Write(Buffer, 0, Buffer.Length);
+                            Thread.Sleep(50);
+                        }
 
-                  
-                    stream.Write(UB, 0, UB.Length);
-                    Thread.Sleep(50);
+                        int len = (int)(reader.BaseStream.Length - reader.BaseStream.Position);
+                        Buffer = reader.ReadBytes(len);
 
-                    Buffer = Encoding.UTF8.GetBytes(Prefix + "This is the end of file");
-                    stream.WriteAsync(Buffer, 0, Buffer.Length);
-                    Thread.Sleep(50);
 
-                    reader.Close();
 
-                    file = false;
+
+                        stream.Write(Buffer, 0, Buffer.Length);
+                        Thread.Sleep(50);
+
+                        Buffer = Encoding.UTF8.GetBytes(Prefix + "This is the end of file");
+                        stream.WriteAsync(Buffer, 0, Buffer.Length);
+                        Thread.Sleep(50);
+
+                        reader.Close();
+
+                        file = false;
+                    }
+
 
                     BeginReading();
                 }
@@ -643,6 +842,13 @@ namespace ChatTCPFormExample
             byte[] databyte = UnicodeEncoding.UTF8.GetBytes(data);
 
             byte[] Buffer = UnicodeEncoding.UTF8.GetBytes(Prefix + "SetValueArray=" + databyte.Length.ToString());
+
+
+            if (WithoutKey)
+            {
+                Buffer = UnicodeEncoding.UTF8.GetBytes("SetValueArray=" + databyte.Length.ToString());
+            }
+
             stream.Write(Buffer, 0, Buffer.Length);
             Thread.Sleep(50);
 
@@ -718,27 +924,56 @@ namespace ChatTCPFormExample
 
             foreach (byte[] b in mas_list)
             {
+
+
                 byte[] B = UnicodeEncoding.UTF8.GetBytes(Prefix + "SetValueArray=" + b.Length.ToString());
-                stream.Write(B, 0, B.Length);
-                Thread.Sleep(50);
 
-                UB = dataPrefix;
 
-                //Прибавляем к каждому пакету префикс
+                if (!WithoutKey)
+                {
 
-                Array.Resize(ref UB, UB.Length + b.Length);
-                Array.Copy(b, 0, UB, UB.Length - b.Length, b.Length);
-
-                stream.Write(UB, 0, UB.Length);
-                Thread.Sleep(50);
-
-                start = false;
-                BeginReadingSetValueArray();
-
-                while (!start)
-                { 
+                    stream.Write(B, 0, B.Length);
                     Thread.Sleep(50);
-                }              
+
+                    UB = dataPrefix;
+
+                    //Прибавляем к каждому пакету префикс
+
+                    Array.Resize(ref UB, UB.Length + b.Length);
+                    Array.Copy(b, 0, UB, UB.Length - b.Length, b.Length);
+
+                    stream.Write(UB, 0, UB.Length);
+                    Thread.Sleep(50);
+
+                    start = false;
+                    BeginReadingSetValueArray();
+
+                    while (!start)
+                    {
+                        Thread.Sleep(50);
+                    }
+                }
+                else
+                {
+                    B = UnicodeEncoding.UTF8.GetBytes("SetValueArray=" + b.Length.ToString());
+
+                    stream.Write(B, 0, B.Length);
+                    Thread.Sleep(50);
+
+                              
+
+
+                    stream.Write(b, 0, b.Length);
+                    Thread.Sleep(50);
+
+                    start = false;
+                    BeginReadingSetValueArray();
+
+                    while (!start)
+                    {
+                        Thread.Sleep(50);
+                    }
+                }
 
             }
 
@@ -749,18 +984,72 @@ namespace ChatTCPFormExample
 
         private void buttonReConnect_Click(object sender, EventArgs e)
         {
+            //OK = false;
+
+            //client = new TcpClient();
+
+            //try
+            //{
+            //    if (!WithoutKey)
+            //        client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
+            //    else
+            //        client.BeginConnect(host, port, new AsyncCallback(OnConnect_TCP_WK), null);
+
+            //    if (UseNotificationChannel)
+            //    {
+            //        clientNotification = new TcpClient();
+
+            //        clientNotification.BeginConnect(hostNotification, portNotification, new AsyncCallback(OnConnect_Notification), null);
+            //    }
+
+            //}
+            //catch (Exception ex)
+            //{
+            //    System.Diagnostics.Debug.WriteLine(ex.Message);
+            //}
+
+
+            ////Ожидание подключения
+            //while (!OK)
+            //{
+            //    Application.DoEvents();
+            //    Thread.Sleep(20);
+            //}
+
+
             OK = false;
 
             client = new TcpClient();
 
             try
             {
-                client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
+                if (!WithoutKey)
+                    client.BeginConnect(host, port, new AsyncCallback(OnConnect), null);
+                else
+                    client.BeginConnect(host, port, new AsyncCallback(OnConnect_TCP_WK), null);
+
+
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine(ex.Message);
             }
+
+            try
+            {
+
+                if (UseNotificationChannel)
+                {
+                    clientNotification = new TcpClient();
+
+                    clientNotification.BeginConnect(hostNotification, portNotification, new AsyncCallback(OnConnect_Notification), null);
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine(ex.Message);
+            }
+
 
 
             //Ожидание подключения
@@ -769,6 +1058,22 @@ namespace ChatTCPFormExample
                 Application.DoEvents();
                 Thread.Sleep(20);
             }
+
+
+        }
+
+        private void buttonDisconnectAndWaitForNew_Click(object sender, EventArgs e)
+        {
+            string Command = "Disconnect and wait for new";
+            textBox1.Text = Command;
+            button1.PerformClick();
+        }
+
+        private void buttonBayBay_Click(object sender, EventArgs e)
+        {
+            string Command = "Bay-Bay";
+            textBox1.Text = Command;
+            button1.PerformClick();
         }
     }
 }

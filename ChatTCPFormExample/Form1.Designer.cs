@@ -39,6 +39,8 @@ namespace ChatTCPFormExample
             this.buttonSetValueArrayV2 = new System.Windows.Forms.Button();
             this.buttonSetValueArray = new System.Windows.Forms.Button();
             this.buttonReConnect = new System.Windows.Forms.Button();
+            this.buttonDisconnectAndWaitForNew = new System.Windows.Forms.Button();
+            this.buttonBayBay = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // textBox1
@@ -60,17 +62,17 @@ namespace ChatTCPFormExample
             // 
             // textBox2
             // 
-            this.textBox2.Location = new System.Drawing.Point(14, 83);
+            this.textBox2.Location = new System.Drawing.Point(14, 142);
             this.textBox2.Multiline = true;
             this.textBox2.Name = "textBox2";
             this.textBox2.ReadOnly = true;
             this.textBox2.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            this.textBox2.Size = new System.Drawing.Size(588, 346);
+            this.textBox2.Size = new System.Drawing.Size(588, 287);
             this.textBox2.TabIndex = 2;
             // 
             // button2
             // 
-            this.button2.Location = new System.Drawing.Point(406, 10);
+            this.button2.Location = new System.Drawing.Point(373, 13);
             this.button2.Name = "button2";
             this.button2.Size = new System.Drawing.Size(75, 23);
             this.button2.TabIndex = 3;
@@ -84,7 +86,7 @@ namespace ChatTCPFormExample
             // 
             // button3
             // 
-            this.button3.Location = new System.Drawing.Point(507, 11);
+            this.button3.Location = new System.Drawing.Point(373, 71);
             this.button3.Name = "button3";
             this.button3.Size = new System.Drawing.Size(75, 23);
             this.button3.TabIndex = 4;
@@ -94,7 +96,7 @@ namespace ChatTCPFormExample
             // 
             // buttonLoadLE_eql
             // 
-            this.buttonLoadLE_eql.Location = new System.Drawing.Point(406, 39);
+            this.buttonLoadLE_eql.Location = new System.Drawing.Point(373, 42);
             this.buttonLoadLE_eql.Name = "buttonLoadLE_eql";
             this.buttonLoadLE_eql.Size = new System.Drawing.Size(75, 23);
             this.buttonLoadLE_eql.TabIndex = 6;
@@ -124,7 +126,7 @@ namespace ChatTCPFormExample
             // 
             // buttonReConnect
             // 
-            this.buttonReConnect.Location = new System.Drawing.Point(507, 38);
+            this.buttonReConnect.Location = new System.Drawing.Point(469, 13);
             this.buttonReConnect.Name = "buttonReConnect";
             this.buttonReConnect.Size = new System.Drawing.Size(75, 23);
             this.buttonReConnect.TabIndex = 25;
@@ -132,11 +134,33 @@ namespace ChatTCPFormExample
             this.buttonReConnect.UseVisualStyleBackColor = true;
             this.buttonReConnect.Click += new System.EventHandler(this.buttonReConnect_Click);
             // 
+            // buttonDisconnectAndWaitForNew
+            // 
+            this.buttonDisconnectAndWaitForNew.Location = new System.Drawing.Point(469, 42);
+            this.buttonDisconnectAndWaitForNew.Name = "buttonDisconnectAndWaitForNew";
+            this.buttonDisconnectAndWaitForNew.Size = new System.Drawing.Size(75, 52);
+            this.buttonDisconnectAndWaitForNew.TabIndex = 26;
+            this.buttonDisconnectAndWaitForNew.Text = "Disconnect and wait for new";
+            this.buttonDisconnectAndWaitForNew.UseVisualStyleBackColor = true;
+            this.buttonDisconnectAndWaitForNew.Click += new System.EventHandler(this.buttonDisconnectAndWaitForNew_Click);
+            // 
+            // buttonBayBay
+            // 
+            this.buttonBayBay.Location = new System.Drawing.Point(469, 101);
+            this.buttonBayBay.Name = "buttonBayBay";
+            this.buttonBayBay.Size = new System.Drawing.Size(75, 23);
+            this.buttonBayBay.TabIndex = 27;
+            this.buttonBayBay.Text = "Bay-Bay";
+            this.buttonBayBay.UseVisualStyleBackColor = true;
+            this.buttonBayBay.Click += new System.EventHandler(this.buttonBayBay_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(614, 441);
+            this.Controls.Add(this.buttonBayBay);
+            this.Controls.Add(this.buttonDisconnectAndWaitForNew);
             this.Controls.Add(this.buttonReConnect);
             this.Controls.Add(this.buttonSetValueArrayV2);
             this.Controls.Add(this.buttonSetValueArray);
@@ -172,6 +196,8 @@ namespace ChatTCPFormExample
         private System.Windows.Forms.Button buttonSetValueArrayV2;
         private System.Windows.Forms.Button buttonSetValueArray;
         private System.Windows.Forms.Button buttonReConnect;
+        private System.Windows.Forms.Button buttonDisconnectAndWaitForNew;
+        private System.Windows.Forms.Button buttonBayBay;
     }
 }
 
